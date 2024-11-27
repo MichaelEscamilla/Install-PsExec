@@ -2,7 +2,7 @@ param (
     [ValidateSet("x64", "x86")]
     [string]$Architecture = "x64",
     [switch]$AcceptEULA,
-    [switch]$RunInternetExplorer
+    [switch]$RunIEasSYSTEM
 )
 
 ### Check if connected to the internet, No Internet, No PsExec
@@ -66,21 +66,25 @@ if ($AcceptEULA) {
     New-ItemProperty -Path $RegPath -Name $RegName -Value $RegValue -PropertyType DWord -Force | Out-Null
 }
 
-### Launch PsExec and Run explorer.exe as SYSTEM
-if ($RunInternetExplorer) {
+### Launch PsExec and Run iexplorer.exe as SYSTEM
+if ($RunIEasSYSTEM) {
     Write-Host "'Run Internet Explorer' Option selected"
     # Get the Security Principal
-    $Global:currentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+    $Global:CurrentPrincipal = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
 
     # Check if the script is running as an administrator
     Write-Host "Checking if script is running as an administrator"
-    if (($currentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))) {
+    if (($CurrentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))) {
         Write-Host "Script is running as an administrator"
         Start-Process -FilePath $SaveFile -ArgumentList "-i -s `"C:\Program Files\Internet Explorer\iexplore.exe`""
-        Write-Host "Successfully launched Internet Explorer as SYSTEM"
+        Write-Host "Successfully launched Internet Explorer as SYSTEM" -ForegroundColor Green
     }
     else {
-        Write-Error "This script must be run as an administrator"
+        Write-Host "Current Principal: [$($CurrentPrincipal)]"
+        Write-Host "Current Principal Identity Name: [$($CurrentPrincipal.Identity.Name)]"
+        Write-Host "Current Principal IsInRole: [$($CurrentPrincipal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))]"
+        Write-Host "This script must be run as an administrator to start Internet Explorer as SYSTEM" -ForegroundColor Red
+        Write-Host "Please rerun the script as an administrator" -ForegroundColor Red
         exit 3
     }
 }
